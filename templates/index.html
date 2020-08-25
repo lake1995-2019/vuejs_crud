@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Vue.js & Django | CRUD</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+  </head>
+
+  <body>
+    <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
+
+    <script src="https://cdn.jsdelivr.net/npm/vue@2.5.13/dist/vue.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vue-resource@1.3.5"></script>
+
+    <!--ここから追加-->
+    <!--script type=”text/javascript”>
+      new Vue({
+        el: '#starting',
+        delimiters: [‘${‘,’}’],
+        data: {
+        articles: [],
+        loading: false,
+        currentArticle: {},
+        message: null,
+        newArticle: { ‘article_heading’: null, ‘article_body’: null },
+      },
+      mounted: function() {
+        this.getArticles();
+      },
+      methods: {
+      //////////////////////////
+       getArticles: function() {
+          console.log("start");
+          this.loading = true;
+          this.$http.get(‘/api/article/’)
+              .then((response) => {
+                console.log("ok");
+                this.articles = response.data;
+                this.loading = false;
+              })
+              .catch((err) => {
+                console.log("ng");
+                this.loading = false;
+                console.log(err);
+              })
+         },
+       getArticle: function(id) {
+          this.loading = true;
+          this.$http.get(`/api/article/${id}/`)
+              .then((response) => {
+                this.currentArticle = response.data;
+                this.loading = false;
+              })
+              .catch((err) => {
+                this.loading = false;
+                console.log(err);
+              })
+         },
+       addArticle: function() {
+          this.loading = true;
+          this.$http.post(‘/api/article/’,this.newArticle)
+              .then((response) => {
+                this.loading = false;
+                this.getArticles();
+              })
+              .catch((err) => {
+                this.loading = false;
+                console.log(err);
+              })
+         },
+       updateArticle: function() {
+          this.loading = true;
+          this.$http.put(`/api/article/${this.currentArticle.article_id}/`,     this.currentArticle)
+              .then((response) => {
+                this.loading = false;
+                this.currentArticle = response.data;
+                this.getArticles();
+              })
+              .catch((err) => {
+                this.loading = false;
+                console.log(err);
+              })
+         },
+       deleteArticle: function(id) {
+          this.loading = true;
+          this.$http.delete(`/api/article/${id}/` )
+              .then((response) => {
+                this.loading = false;
+                this.getArticles();
+              })
+              .catch((err) => {
+                this.loading = false;
+                console.log(err);
+              })
+        }
+      ///////////////////////////
+
+      }
+      });
+    </script-->
+
+    <div id="starting"></div>
+
+<script>
+
+ var vue_example =new Vue({
+  el: '#starting',
+  template:`<div class="container">
+        <div class="row">
+          <h1>投稿一覧
+            <button type="button"
+                class="btn btn-primary"
+                data-toggle="modal"
+                data-target="#addArticleModal">新規追加</button>
+          </h1>
+          <table class="table">
+            <thead>
+              <tr>
+                <th scope="col">🦔</th>
+                <th scope="col">ヘッダー</th>
+                <th scope="col">アクション</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="article in articles">
+                <th scope="row">{{article.article_id}}</th>
+                <td>{{article.article_heading}}</td>
+                <td>
+                  <button class="btn btn-info" v-on:click="getArticle(article.article_id)">編集</button>
+                  <button class="btn btn-danger" v-on:click="deleteArticle(article.article_id)">削除</button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+
+            <!-- Add Article Modal -->
+            <div class="modal fade" id="addArticleModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLongTitle"
+              aria-hidden="true">
+              <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                  <div class="modal-header">
+                    <h5 class="modal-title" id="exampleModalLongTitle">
+                      新規追加
+                    </h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                      <span aria-hidden="true">×</span>
+                    </button>
+                  </div>
+                  <form v-on:submit.prevent="addArticle()">
+                    <div class="modal-body">
+                      <div class="form-group">
+                        <label for="article_heading">タイトル</label>
+                        <input type="text" class="form-control" id="article_heading" placeholder="タイトルを入力してください"
+                          v-model="newArticle.article_heading" required="required" />
+                      </div>
+                      <div class="form-group">
+                        <label for="article_body">本文</label>
+                        <textarea class="form-control" id="article_body" placeholder="本文を入力してください" v-model="newArticle.article_body"
+                          required="required" rows="3"></textarea>
+                      </div>
+                    </div>
+                    <div class="modal-footer">
+                      <button type="button" class="btn btn-secondary m-progress" data-dismiss="modal">
+                        閉じる
+                      </button>
+                      <button type="submit" class="btn btn-primary">
+                        保存
+                      </button>
+                    </div>
+                  </form>
+                </div>
+              </div>
+              <div class="loading" v-if="loading===true">Loading…</div>
+            </div>
+            <!-- End of add article modal -->
+
+        </div>
+      </div>
+      <div class="loading" v-if="loading===true">Loading…</div>`,
+  data: {
+
+      articles: [],
+      loading: false,
+      currentArticle: {},
+      message: null,
+      newArticle: {"article_heading": null, "article_body": null },
+      },
+      mounted: function () {
+          this.getArticles();
+      },
+
+      methods: {
+
+          getArticles: function () {
+              console.log("start");
+              this.loading = true;
+              this.$http.get('/api/article/')
+                  .then((response) => {
+                      console.log("ok");
+                      this.articles = response.data;
+                      this.loading = false;
+                    })
+                  .catch((err) => {
+                      console.log("ng");
+                      this.loading = false;
+                      console.log(err);
+                  })
+          },
+          getArticle: function (id) {
+              this.loading = true;
+              this.$http.get('/api/article/${id}/')
+                  .then((response) => {
+                      this.currentArticle = response.data;
+                      this.loading = false;
+                  })
+                  .catch((err) => {
+                      this.loading = false;
+                      console.log(err);
+                  })
+          },
+          addArticle: function () {
+              this.loading = true;
+              this.$http.post('/api/article /',
+              this.newArticle
+          )
+          .
+              then((response) => {
+                  this.loading = false;
+                  this.getArticles();
+              })
+                  .catch((err) => {
+                      this.loading = false;
+                      console.log(err);
+                  })
+          },
+          updateArticle: function () {
+              this.loading = true;
+              this.$http.put(`/api/article/${this.currentArticle.article_id}/`, this.currentArticle)
+                  .then((response) => {
+                      this.loading = false;
+                      this.currentArticle = response.data;
+                      this.getArticles();
+                  })
+                  .catch((err) => {
+                      this.loading = false;
+                      console.log(err);
+                  })
+          },
+          deleteArticle: function (id) {
+              this.loading = true;
+              this.$http.delete(`/api/article/${id}/`)
+                  .then((response) => {
+                      this.loading = false;
+                      this.getArticles();
+                  })
+                  .catch((err) => {
+                      this.loading = false;
+                      console.log(err);
+                  })
+          }
+      },
+  }
+})
+</script>
+
+    <!--div id="starting">
+      <div class="container">
+        <div class="row">
+          <h1>投稿一覧
+            <button type="button"
+                class="btn btn-primary"
+                data-toggle="modal"
+                data-target="#addArticleModal">新規追加</button>
+          </h1>
+          <table class="table">
+            <thead>
+              <tr>
+                <th scope="col">🦔</th>
+                <th scope="col">ヘッダー</th>
+                <th scope="col">アクション</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="article in articles">
+                <th scope="row">{{article.article_id}}</th>
+                <td>{{article.article_heading}}</td>
+                <td>
+                  <button class="btn btn-info" v-on:click="getArticle(article.article_id)">編集</button>
+                  <button class="btn btn-danger" v-on:click="deleteArticle(article.article_id)">削除</button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+
+
+            <div class="modal fade" id="addArticleModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLongTitle"
+              aria-hidden="true">
+              <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                  <div class="modal-header">
+                    <h5 class="modal-title" id="exampleModalLongTitle">
+                      新規追加
+                    </h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                      <span aria-hidden="true">×</span>
+                    </button>
+                  </div>
+                  <form v-on:submit.prevent="addArticle()">
+                    <div class="modal-body">
+                      <div class="form-group">
+                        <label for="article_heading">タイトル</label>
+                        <input type="text" class="form-control" id="article_heading" placeholder="タイトルを入力してください"
+                          v-model="newArticle.article_heading" required="required" />
+                      </div>
+                      <div class="form-group">
+                        <label for="article_body">本文</label>
+                        <textarea class="form-control" id="article_body" placeholder="本文を入力してください" v-model="newArticle.article_body"
+                          required="required" rows="3"></textarea>
+                      </div>
+                    </div>
+                    <div class="modal-footer">
+                      <button type="button" class="btn btn-secondary m-progress" data-dismiss="modal">
+                        閉じる
+                      </button>
+                      <button type="submit" class="btn btn-primary">
+                        保存
+                      </button>
+                    </div>
+                  </form>
+                </div>
+              </div>
+              <div class="loading" v-if="loading===true">Loading…</div>
+            </div>
+
+
+        </div>
+      </div>
+      <div class="loading" v-if="loading===true">Loading…</div>
+    </div-->
+
+  </body>
+</html>
